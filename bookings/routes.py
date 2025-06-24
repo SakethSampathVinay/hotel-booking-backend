@@ -1,18 +1,22 @@
 from flask import Blueprint, request, jsonify, current_app 
 from datetime import datetime 
 from bson.objectid import ObjectId 
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 booking_bp = Blueprint('booking', __name__)
 
 @booking_bp.route('/book-room', methods=['POST', 'OPTIONS'])
+@jwt_required()
 def book_room():
     if request.method == 'OPTIONS':
         return jsonify({'message': 'CORS preflight successful'}), 200
 
     mongo = current_app.mongo
     data = request.get_json()
+    user = get_jwt_identity()
 
     booking = {
+        'user': user,
     'room_id': ObjectId(data['room_id']),
     'guest_count': data['guest_count'],
     'image': data.get('image', ''),
@@ -31,9 +35,12 @@ def book_room():
     }), 201 
 
 @booking_bp.route('/get-bookings', methods=['GET'])
+@jwt_required()
 def get_bookings():
     mongo = current_app.mongo
-    bookings = mongo.db.bookings.find()
+    user_id = get_jwt_identity()
+
+    bookings = mongo.db.bookings.find({'user': user_id})
 
     booking_list = []
 

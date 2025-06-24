@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_bcrypt import Bcrypt 
 from flask_jwt_extended import create_access_token
 from datetime import timedelta 
@@ -9,6 +9,7 @@ mongo = None
 
 @auth.route('/signup', methods = ['POST'])
 def signup():
+    mongo = current_app.mongo
     data = request.get_json()
 
     if not data.get('name') or not data or not data.get('email') or not data.get('password'):
@@ -18,15 +19,22 @@ def signup():
         return jsonify({'message': 'Email already exists'}), 409 
     
     hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    token = create_access_token(identity=str(user['_id']), expires_delta=timedelta(hours=1))
+
+
+    if not token:
+        return jsonify({'message': 'Token creation failed'}), 500
+
     mongo.db.users.insert_one({
         'name': data['name'],
         'email': data['email'],
         'password': hashed_password
     })
-    return jsonify({'message': 'User created successfully'}), 201
+    return jsonify({'message': 'User created successfully', 'token': token}), 201
 
 @auth.route('/login', methods = ['POST'])
 def login():
+    mongo = current_app.mongo
     data = request.get_json()
 
     if not data or not data.get('email') or not data.get('password'):
@@ -37,7 +45,7 @@ def login():
     })
 
     if user and bcrypt.check_password_hash(user['password'], data['password']):
-        token = create_access_token(identity = str(user['_id']), expires_delta = timedelta(days = 1))
+        token = create_access_token(identity=str(user['_id']), expires_delta=timedelta(hours=1))
         return jsonify({'token': token}), 200 
     return jsonify({'message': "Invalid credentails"}), 401 
 
