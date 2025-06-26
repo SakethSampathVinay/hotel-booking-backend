@@ -1,5 +1,3 @@
-# rooms/routes.py
-
 from flask import Blueprint, request, jsonify, current_app
 from bson.objectid import ObjectId
 from datetime import datetime
@@ -42,7 +40,11 @@ def get_rooms_by_hotel(room_id):
 @room_bp.route('/get-rooms', methods = ['GET'])
 def get_all_rooms():
     mongo = current_app.mongo
-    rooms = mongo.db.rooms.find()
+    rooms = mongo.db.rooms.find({})
+
+    if not rooms:
+        return jsonify({'message': 'No rooms found'}), 404
+
     room_list = []
     for room in rooms:
         room['_id'] = str(room['_id'])
