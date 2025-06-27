@@ -49,4 +49,3 @@ def login():
         token = create_access_token(identity=str(user['_id']), expires_delta=timedelta(hours=1))
         return jsonify({'token': token}), 200 
     return jsonify({'message': "Invalid credentails"}), 401 
-

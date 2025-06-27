@@ -13,7 +13,7 @@ app.config.from_object(Config)
 print("✅ MONGO_URI loaded:", app.config.get("MONGO_URI"))
 
 
-CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}}, supports_credentials=True)
+CORS(app) #, resources={r"/*": {"origins": "https://hotel-booking-c8eojupkl-sakethsampathvinays-projects.vercel.app"}}, supports_credentials=True
 jwt = JWTManager(app)
 mongo = PyMongo(app)
 app.mongo = mongo
