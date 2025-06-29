@@ -8,7 +8,6 @@ room_bp = Blueprint('room', __name__)
 def add_room():
     mongo = current_app.mongo
     data = request.get_json()
-    
     new_room = {
         'hotelName': data['hotelName'],
         'streetAddress': data['streetAddress'],

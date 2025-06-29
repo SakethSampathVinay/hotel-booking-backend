@@ -26,12 +26,11 @@ def signup():
         'password': hashed_password
     })
 
-    user_id = result.inserted_id  # 🔑 This line was missing
+    user_id = result.inserted_id
 
     token = create_access_token(identity=str(user_id), expires_delta=timedelta(hours=1))
 
     return jsonify({'message': 'User created successfully', 'token': token}), 201
-
 
 @auth.route('/login', methods = ['POST'])
 def login():
