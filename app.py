@@ -13,6 +13,8 @@ from admin.routes import admin_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 print("Mongo DB Connected Successfully")
 
 
@@ -20,6 +22,8 @@ CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://local
 jwt = JWTManager(app)
 mongo = PyMongo(app)
 app.mongo = mongo
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(room_bp)

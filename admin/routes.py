@@ -1,6 +1,8 @@
+import os
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import get_jwt_identity
 from bson import ObjectId
+from werkzeug.utils import secure_filename
+import uuid
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -15,11 +17,6 @@ def dashboard():
         'status': 1,
         '_id': 0
     }))
-
-    total_count = len(bookings)
-    total_amount = 0
-    for booking in bookings:
-        total_amount += booking.get('pricePerNight', 0)
 
     user_ids = []
     for booking in bookings:
@@ -43,15 +40,9 @@ def dashboard():
             'hotel_name': booking.get('name', 'N/A'),
             'amount': booking.get('pricePerNight', 0),
             'payment_status': booking.get('status', 'Unknown'),
-            'total_amount': total_amount,
-            'count': total_count,
         })
 
-    return jsonify({'summary': {
-        'total_bookings': total_count,
-        'total_amount': total_amount
-    },
-    'bookings': dashboard_data}), 200
+    return jsonify(dashboard_data), 200
 
 @admin_bp.route('/booking-summary', methods=['GET'])
 def booking_summary():
@@ -68,3 +59,51 @@ def booking_summary():
         'total_bookings': total_bookings,
         'total_amount': total_amount
     }), 200
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+@admin_bp.route('/add-hotels', methods=['POST'])
+def add_hotels():
+    mongo = current_app.mongo 
+
+    if 'images' not in request.files:
+        return jsonify({'error': 'No image part in the request'}), 400 
+    
+    images = request.files.getlist('images')
+
+    if len(images) != 4:
+        return jsonify({'error': 'Exactly 4 images are required'}), 400 
+    
+    saved_paths = []
+
+    for image in images :
+        if image and allowed_file(image.filename):
+            filename = secure_filename(f"{uuid.uuid4().hex}_{image.filename}")
+            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            image.save(filepath)
+            saved_paths.append(filepath)
+        else:
+            return jsonify({'error': f'Invalid file type: {image.filename}'}), 400 
+
+    hotel_name = request.form.get('hotel_name')
+    hotel_type = request.form.get('hotel_type')
+    price_per_night = request.form.get('price_per_night')
+    amentities = request.form.getlist('amenities')
+
+    if not hotel_name or not hotel_type or not price_per_night or not amentities:
+        return jsonify({'error': 'Missing required hotel fields'}), 400
+
+    hotel_data = {
+        'images': saved_paths,
+        'hotel_name': hotel_name,
+        'hotel_type': hotel_type,
+        'price_per_night': float(price_per_night),
+        'amenities': amentities
+    } 
+
+    mongo.db.admin.insert_one(hotel_data)
+    
+    return jsonify({'message': 'Hotel Added Successfully', 'hotel': hotel_data}), 201
+
