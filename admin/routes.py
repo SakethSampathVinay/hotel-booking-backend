@@ -78,32 +78,53 @@ def add_hotels():
     
     saved_paths = []
 
-    for image in images :
+    for image in images:
         if image and allowed_file(image.filename):
             filename = secure_filename(f"{uuid.uuid4().hex}_{image.filename}")
             filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             image.save(filepath)
-            saved_paths.append(filepath)
+            saved_paths.append(filepath.replace("\\", "/"))
         else:
             return jsonify({'error': f'Invalid file type: {image.filename}'}), 400 
 
     hotel_name = request.form.get('hotel_name')
+    street_address = request.form.get("street_address")
     hotel_type = request.form.get('hotel_type')
     price_per_night = request.form.get('price_per_night')
-    amentities = request.form.getlist('amenities')
+    amenities = request.form.getlist('amenities')
 
-    if not hotel_name or not hotel_type or not price_per_night or not amentities:
+    if not hotel_name or not hotel_type or not price_per_night or not amenities:
         return jsonify({'error': 'Missing required hotel fields'}), 400
 
     hotel_data = {
         'images': saved_paths,
-        'hotel_name': hotel_name,
-        'hotel_type': hotel_type,
-        'price_per_night': float(price_per_night),
-        'amenities': amentities
+        'hotelName': hotel_name,
+        'streetAddress': street_address,
+        'roomType': hotel_type,
+        'pricePerNight': float(price_per_night),
+        'amenities': amenities
     } 
 
-    mongo.db.admin.insert_one(hotel_data)
-    
+    result = mongo.db.rooms.insert_one(hotel_data)
+    hotel_data['_id'] = str(result.inserted_id)
+
     return jsonify({'message': 'Hotel Added Successfully', 'hotel': hotel_data}), 201
 
+@admin_bp.route('/hotels-listing', methods = ['GET'])
+def hotel_listing():
+    mongo = current_app.mongo
+    hotels = list(mongo.db.rooms.find({}, 
+    {'hotelName': 1, "roomType": 1, "pricePerNight": 1, "amenities": 1}))
+    
+    return jsonify(hotels), 200
+
+
+@admin_bp.route('/delete-hotel/<hotel_id>', methods=['DELETE'])
+def delete_hotel(hotel_id):
+    mongo = current_app.mongo
+
+    result = mongo.db.rooms.delete_one({'_id': ObjectId(hotel_id)})
+    if result.deleted_count == 1:
+        return jsonify({'message': 'Hotel Deleted'}), 200 
+    else:
+        return jsonify({'message': 'Hotel not found'}), 404 
