@@ -29,7 +29,5 @@ def create_feedback():
 @jwt_required()
 def get_feedback(hotel_id):
     mongo = current_app.mongo
-    
     feedbacks = list(mongo.db.feedback.find({'hotel_id': ObjectId(hotel_id)}, {'_id': 0, 'rating': 1, 'comment': 1, 'timestamp': 1}))
-
     return jsonify(feedbacks), 200
