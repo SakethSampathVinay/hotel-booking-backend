@@ -17,6 +17,7 @@ from payments.routes import payment_bp
 from userProfile.routes import profile_bp
 from admin.routes import admin_bp
 from chatbot.routes import chatbot_bp
+from feedback.routes import feedback_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -39,6 +40,7 @@ app.register_blueprint(payment_bp)
 app.register_blueprint(profile_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(chatbot_bp)
+app.register_blueprint(feedback_bp)
 
 if __name__ == "__main__":
     app.run(debug = True, port = 5000, host = '0.0.0.0')
