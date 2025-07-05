@@ -5,6 +5,7 @@ from flask_pymongo import PyMongo
 from config import Config  
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
+from flask import send_from_directory
 from dotenv import load_dotenv
 load_dotenv()
 

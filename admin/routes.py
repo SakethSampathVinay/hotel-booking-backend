@@ -81,9 +81,10 @@ def add_hotels():
     for image in images:
         if image and allowed_file(image.filename):
             filename = secure_filename(f"{uuid.uuid4().hex}_{image.filename}")
+            os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
             filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             image.save(filepath)
-            saved_paths.append(filepath.replace("\\", "/"))
+            saved_paths.append(filename)
         else:
             return jsonify({'error': f'Invalid file type: {image.filename}'}), 400 
 

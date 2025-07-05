@@ -23,6 +23,7 @@ def signup():
     result = mongo.db.users.insert_one({
         'name': data['name'],
         'email': data['email'],
+        'phone': data['phone'],
         'password': hashed_password
     })
 

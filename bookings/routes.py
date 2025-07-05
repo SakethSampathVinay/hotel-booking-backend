@@ -28,7 +28,7 @@ def send_brevo_email(to_email, username, booking_id, name, address, check_in, pr
         html_content=f"""
             <html>
             <body style="font-family: Arial, sans-serif; color: #333;">
-                <h2 style="color: #2C3E50;">Hello <span style="color: #2980B9;">{username}</span>,</h2>
+                <h2 style="color: #2C3E50;">Hello <span>{username}</span>,</h2>
 
                 <p style="font-size: 16px;">
                 <strong>Thank you</strong> for your booking! Below are your booking details:
@@ -53,7 +53,7 @@ def send_brevo_email(to_email, username, booking_id, name, address, check_in, pr
                 </tr>
                 <tr>
                     <td><strong>💰 Booking Amount:</strong></td>
-                    <td>₹{price}</td>
+                    <td>${price}</td>
                 </tr>
                 </table>
 
@@ -93,6 +93,7 @@ def book_room():
         'image': data.get('image', ''),
         'name': data.get('name', ''),
         'address': data.get('address', ''),
+        'guest_count': data.get('guest_count', ''),
         'check_in': datetime.strptime(data['check_in'], '%Y-%m-%d'),
         'check_out': datetime.strptime(data['check_out'], '%Y-%m-%d'),
         'status': 'pending',
