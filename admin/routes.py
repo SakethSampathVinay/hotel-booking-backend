@@ -1,8 +1,10 @@
-import os
+import os 
 from flask import Blueprint, request, jsonify, current_app
 from bson import ObjectId
 from werkzeug.utils import secure_filename
 import uuid
+import cloudinary
+import cloudinary.uploader
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -60,9 +62,10 @@ def booking_summary():
         'total_amount': total_amount
     }), 200
 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 @admin_bp.route('/add-hotels', methods=['POST'])
 def add_hotels():
@@ -75,18 +78,25 @@ def add_hotels():
 
     if len(images) != 4:
         return jsonify({'error': 'Exactly 4 images are required'}), 400 
+
+    cloudinary.config(
+        cloud_name=current_app.config['CLOUDINARY_CLOUD_NAME'],
+        api_key=current_app.config['CLOUDINARY_API_KEY'],
+        api_secret=current_app.config['CLOUDINARY_API_SECRET']
+    )
+
     
     saved_paths = []
 
     for image in images:
         if image and allowed_file(image.filename):
-            filename = secure_filename(f"{uuid.uuid4().hex}_{image.filename}")
-            os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
-            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            image.save(filepath)
-            saved_paths.append(filename)
+            try:
+                result = cloudinary.uploader.upload(image, folder="hotel_images")
+                saved_paths.append(result['secure_url'])
+            except Exception as e:
+                return jsonify({'error': f'Failed to upload image: {str(e)}'}), 500
         else:
-            return jsonify({'error': f'Invalid file type: {image.filename}'}), 400 
+            return jsonify({'error': f'Invalid file type: {image.filename}'}), 400
 
     hotel_name = request.form.get('hotel_name')
     street_address = request.form.get("street_address")
