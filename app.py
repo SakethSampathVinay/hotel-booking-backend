@@ -1,3 +1,4 @@
+import os 
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager 
@@ -21,7 +22,7 @@ from feedback.routes import feedback_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 print("Mongo DB Connected Successfully")
 
@@ -32,6 +33,11 @@ mongo = PyMongo(app)
 app.mongo = mongo
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+@app.route('/static/uploads/<path:filename>')
+def serve_uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(room_bp)
