@@ -10,7 +10,6 @@ import os
 
 load_dotenv()
 
-
 booking_bp = Blueprint('booking', __name__)
 
 def send_brevo_email(to_email, username, booking_id, name, address, check_in, price):
@@ -53,7 +52,7 @@ def send_brevo_email(to_email, username, booking_id, name, address, check_in, pr
                 </tr>
                 <tr>
                     <td><strong>💰 Booking Amount:</strong></td>
-                    <td>${price}</td>
+                    <td>₹{price}</td>
                 </tr>
                 </table>
 
@@ -72,7 +71,6 @@ def send_brevo_email(to_email, username, booking_id, name, address, check_in, pr
         print("✅ Email sent:", response)
     except ApiException as e:
         print("❌ Email sending failed:", e)
-
 
 @booking_bp.route('/book-room', methods=['POST', 'OPTIONS'])
 @jwt_required()
@@ -97,14 +95,15 @@ def book_room():
         'check_in': datetime.strptime(data['check_in'], '%Y-%m-%d'),
         'check_out': datetime.strptime(data['check_out'], '%Y-%m-%d'),
         'status': 'pending',
-        'created_at': datetime.utcnow()
+        'created_at': datetime.utcnow(),
+        'total_amount': data.get('totalAmount')
         }
     result = mongo.db.bookings.insert_one(booking)
     user = mongo.db.users.find_one({'_id': ObjectId(user_id)})
     username = user['name']
     useremail = user['email']
 
-    send_brevo_email(useremail, username, str(result.inserted_id), booking['name'], booking['address'], booking['check_in'], booking['pricePerNight'])
+    send_brevo_email(useremail, username, str(result.inserted_id), booking['name'], booking['address'], booking['check_in'], booking['total_amount'])
 
 
     return jsonify({
@@ -137,6 +136,7 @@ def get_bookings():
             'check_out': booking.get('check_out').strftime('%Y-%m-%d') if booking.get('check_out') else '',
             'created_at': booking.get('created_at').strftime('%Y-%m-%d %H:%M:%S') if booking.get('created_at') else '',
             'status': booking.get('status', ''),
+            'totalAmount': int(booking.get('total_amount', 0) or 0)
         })
     
     return jsonify({'message': 'Bookings retrieved successfully', "bookings": booking_list}), 200
@@ -196,3 +196,47 @@ def cancel_booking(booking_id):
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@booking_bp.route('/calculate-booking', methods = ['POST'])
+@jwt_required()
+def calculate_booking():
+    data = request.get_json()
+    mongo = current_app.mongo
+
+    room_type = data.get('roomType')
+    guest_count = data.get('guest_count')
+    check_in = data.get('check_in')
+    check_out = data.get('check_out')
+
+    if not room_type or not guest_count or not check_in or not check_out:
+        return jsonify({'message': 'Missing required parameters'}), 400
+        
+    booking = mongo.db.rooms.find_one({'roomType': room_type}, {'_id': 0, 'pricePerNight': 1})
+    if not booking:
+        return jsonify({'message': "Room type not found"}), 404
+    
+    rooms_capacity = {
+        'Single Bed': 1,
+        'Double Bed': 2,
+        "Suite": 4
+    }
+
+    check_in = datetime.strptime(check_in, "%Y-%m-%d")
+    check_out = datetime.strptime(check_out, "%Y-%m-%d")
+
+    nights = (check_out - check_in).days 
+
+    if nights <= 0:
+        return jsonify({'message': 'Invalid dates'}), 400 
+    
+    capacity = rooms_capacity.get(room_type)
+    rooms_required = (int(guest_count) + capacity - 1) // capacity
+    price_per_night = booking['pricePerNight']
+    total_price = price_per_night * nights * rooms_required
+    return jsonify({
+        'rooms_required': rooms_required,
+        'guest_count': guest_count,
+        'nights': nights,
+        'price_per_night': price_per_night,
+        'total_amount': total_price
+    }), 200 
