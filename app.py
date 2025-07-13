@@ -25,7 +25,7 @@ app.config.from_object(Config)
 print("Mongo DB Connected Successfully")
 
 
-CORS(app, origins=["https://easystay-admin.vercel.app", "https://easystay-snowy.vercel.app", "http://localhost:4200"])
+CORS(app, origins=["https://easystay-admin.vercel.app", "https://easystay-snowy.vercel.app", "http://localhost:4200"], supports_credentials = True)
 jwt = JWTManager(app)
 mongo = PyMongo(app)
 app.mongo = mongo
