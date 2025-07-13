@@ -201,17 +201,25 @@ def cancel_booking(booking_id):
 @jwt_required()
 def calculate_booking():
     data = request.get_json()
+    print("Received data:", data)
+
     mongo = current_app.mongo
 
+    room_id = data.get('_id')
     room_type = data.get('roomType')
     guest_count = data.get('guest_count')
     check_in = data.get('check_in')
     check_out = data.get('check_out')
 
+    try:
+        room_obj_id = ObjectId(room_id)
+    except Exception:
+        return jsonify({'message': 'Invalid room ID'}), 400
+
     if not room_type or not guest_count or not check_in or not check_out:
         return jsonify({'message': 'Missing required parameters'}), 400
         
-    booking = mongo.db.rooms.find_one({'roomType': room_type}, {'_id': 0, 'pricePerNight': 1})
+    booking = mongo.db.rooms.find_one({'_id': room_obj_id, 'roomType': room_type}, {'_id': 0, 'pricePerNight': 1})
     if not booking:
         return jsonify({'message': "Room type not found"}), 404
     
