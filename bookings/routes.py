@@ -205,7 +205,7 @@ def calculate_booking():
 
     mongo = current_app.mongo
 
-    roomId = data.get('roomId')
+    roomId = data.get('room_id')
     room_type = data.get('roomType')
     guest_count = data.get('guest_count')
     check_in = data.get('check_in')
