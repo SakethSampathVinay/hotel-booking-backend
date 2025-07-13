@@ -205,14 +205,14 @@ def calculate_booking():
 
     mongo = current_app.mongo
 
-    room_id = data.get('_id')
+    roomId = data.get('roomId')
     room_type = data.get('roomType')
     guest_count = data.get('guest_count')
     check_in = data.get('check_in')
     check_out = data.get('check_out')
 
     try:
-        room_obj_id = ObjectId(room_id)
+        room_obj_id = ObjectId(roomId)
     except Exception:
         return jsonify({'message': 'Invalid room ID'}), 400
 
