@@ -1,9 +1,9 @@
-import os
-from dotenv import load_dotenv
+import os # Configuration file for the backend application
+from dotenv import load_dotenv # Load environment variables from a .env file
 
-load_dotenv()
+load_dotenv() # Load environment variables from the .env file
 
-class Config:
+class Config: # Configuration class to hold application settings
     SECRET_KEY = os.getenv('SECRET_KEY')
     MONGO_URI = os.getenv('MONGO_URI')
     CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')

@@ -11,7 +11,7 @@ admin_bp = Blueprint('admin', __name__)
 @admin_bp.route('/dashboard', methods=['GET'])
 def dashboard():
     mongo = current_app.mongo
-
+    print(mongo)
     bookings = list(mongo.db.bookings.find({}, {
         'user': 1,
         'name': 1,

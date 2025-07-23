@@ -10,8 +10,8 @@ from flask import send_from_directory
 from dotenv import load_dotenv
 load_dotenv()
 
-
-from auth.routes import auth as auth_bp
+# Importing blueprints for different routes
+from auth.routes import auth as auth_bp 
 from hotels.routes import room_bp
 from bookings.routes import booking_bp
 from payments.routes import payment_bp
@@ -32,6 +32,7 @@ app.mongo = mongo
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
+# Registering the blueprint
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(room_bp)
 app.register_blueprint(booking_bp)
@@ -40,6 +41,10 @@ app.register_blueprint(profile_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(chatbot_bp)
 app.register_blueprint(feedback_bp)
+
+@app.route('/')
+def index():
+    return "Welcome to EasyStay"
 
 if __name__ == "__main__":
     app.run(debug = True, port = 5000, host = '0.0.0.0')
