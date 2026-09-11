@@ -5,7 +5,8 @@ load_dotenv() # Load environment variables from the .env file
 
 class Config: # Configuration class to hold application settings
     SECRET_KEY = os.getenv('SECRET_KEY')
-    MONGO_URI = os.getenv('MONGO_URI')
+    MONGO_URI = os.getenv('MONGO_URI', 'mongodb+srv://sakethsampath2006:DVdfX13m2ZvgMtxx@cluster0.3nttq5c.mongodb.net/')
     CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
     CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
     CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
+    
